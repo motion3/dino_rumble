@@ -92,6 +92,10 @@ class AnimatedSprite(pygame.sprite.Sprite):
         """This is the method that's being called when 'all_sprites.update(dt)' is called."""
         self.update_time_dependent(dt, player)
         
+
+
+
+
     def eat(self, player):
         deadSoldiers=[]
         playerX = player.rect.x
@@ -114,21 +118,36 @@ def main():
     global soldierList
     global difficulty
     images = load_images(path='img/dino')  # Make sure to provide the relative or full path to the images directory.
+    player = AnimatedSprite(position=(100, 575), images=images)
+    playerEatImg = load_images(path='img/eat')
     bgImg = load_images(path='img/bg')
     bg = AnimatedSprite(position=(0, 0), images=bgImg)
     soldierImg = load_images(path='img/soldier')
     def addSoldier():
         for i in range(difficulty):
             soldierX = random.randint(50, 1150)
-            soldier = AnimatedSprite(position=(soldierX, 600), images=soldierImg)
+            soldier = AnimatedSprite(position=(soldierX, 650), images=soldierImg)
             soldierList.append(soldier)
     addSoldier()
-    player = AnimatedSprite(position=(100, 600), images=images)
+    
     all_sprites = pygame.sprite.Group(bg, player,soldierList)  # Creates a sprite group and adds 'player' to it.
+
+    def dinoEatAnim(player):
+       
+        playerEat = AnimatedSprite(position=(player.rect.x, 575), images=playerEatImg)
+        if player.images == player.images_right:
+             playerEat.images = playerEat.images_right
+        else:
+            playerEat.images = playerEat.images_left
+        return playerEat
+
+
     running = True
     SCORE = 0
     health = 100
     myCounter = 0
+    eatTimer = 50
+    eating = False
     while running:
        # print('x=', player.rect.x)
         if player.rect.x<=0 or player.rect.x>=975:
@@ -150,24 +169,29 @@ def main():
                     for e in soldierList:
                         if e not in deadSoldiers:
                             newList.append(e)
-                   
+                    playerEat = dinoEatAnim(player)
                     soldierList = newList
-                    all_sprites = pygame.sprite.Group(bg, player,soldierList)
+                    all_sprites = pygame.sprite.Group(bg, playerEat,soldierList)
+                    eating = True
                     SCORE += len(deadSoldiers)
                     #print(SCORE)
             elif event.type == pygame.KEYUP:
                 if event.key == pygame.K_RIGHT or event.key == pygame.K_LEFT:
                     player.velocity.x = 0
-        #totalTime = round(pygame.time.get_ticks() / 1000)
-        #if totalTime % 4 == 0:
-            #addSoldier()
-        #print('total time is', totalTime, '      DT is', dt)
         
+        if eating == True:
+            
+            eatTimer -= 1
+            print('eatin = true:  ', eatTimer)
+            if eatTimer == 0:
+                all_sprites = pygame.sprite.Group(bg, player,soldierList)
+                eatTimer =50
+                eating = False
         myCounter += 1
         if (myCounter % 100 == 0):
             addSoldier()
             #shoot
-            all_sprites = pygame.sprite.Group(bg, player,soldierList)
+            #all_sprites = pygame.sprite.Group(bg, player,soldierList)
             if myCounter == 2000:
                 difficulty += 1
                 myCounter = 0
